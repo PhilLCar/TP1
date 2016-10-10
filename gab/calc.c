@@ -340,6 +340,89 @@ void soustraction(struct stack* stk, struct stack* stk1, struct stack* stk2){
 	//printf("%d\n", pop(stk));
 }
 
+void multiplication(struct stack* stk, struct stack* stk1, struct stack* stk2){
+	//Méthode permettant la multiplication entre deux nombres
+
+	//Initialise les variables nécessaires au calcul
+	struct stack* stkAdd1;
+	struct stack* stkAdd2;
+	struct stack* stkAddResult;
+	struct stackElement* current;
+	stkAdd1 = malloc(sizeof(struct stack));
+	stkAdd2 = malloc(sizeof(struct stack));
+	stkAddResult = malloc(sizeof(struct stack));
+	current = malloc(sizeof(struct stackElement));
+	current->next = NULL;
+	stkAdd1->top = NULL;
+	stkAdd2->top = NULL;
+	stkAddResult->top = NULL;
+
+	//Initialise les nombres utilisés pour la multiplication
+	int a; //Nombre 1
+	int b; //Nombre 2
+	int keepNumber; //Chiffre à ajouter à la prochaine itération
+	keepNumber = 0;
+
+	//Initialise si le résultat sera négatif ou non
+	int resultIsNegative;
+	resultIsNegative = -1;
+	if ((stk1->top->isNegative == 1 && stk2->top->isNegative == -1) ||
+		(stk1->top->isNegative == -1 && stk2->top->isNegative == 1)){
+		//Entre si le résultat va être négatif
+		resultIsNegative = 1;
+	}
+
+	while (stk1->top != NULL){
+		/*Multiplie la valeur des unités par toutes les valeurs du nombre 2,
+		la valeur des dizaines par toutes les valeurs du nombre 2, etc.*/
+		a = pop(stk1) - '0';
+
+		//RESET stkAdd1 à chaque boucle  MAY BE PROBLEMATIC
+		stkAdd1->top = NULL;
+
+		//Stack temporaire
+		struct stack* temp;
+		temp = malloc(sizeof(struct stack));
+		temp->top = NULL;
+
+		while (stk2->top != NULL){
+			b = pop(stk2) - '0';
+			if ((a * b) + keepNumber >= 10){
+				int tempInt = (a * b) / 10;
+				push(stkAdd1, (a * b) - (tempInt * 10) + keepNumber + '0');
+				keepNumber = tempInt;
+			}
+			else{
+				push(stkAdd1, (a * b) + keepNumber + '0');
+			}
+			push(temp, b + '0');
+		}
+		stk2 = reverse(temp);
+		free(temp);
+		if (stkAdd2->top != NULL){
+			//do addition entre stkAdd1 et stkAdd2 into stkAddResult
+			
+			push(stkAddResult, stkAdd2->top->valeur);
+			
+			/*addition(stkAddResult, stkAdd1, stkAdd2);
+			stkAdd2 = reverse(stkAddResult);
+			pop(stkAdd2);*/
+		}
+		else{
+			push(stkAdd2, pop(stkAdd1));
+			stkAdd2 = reverse(stkAdd2);
+		}
+	}
+	push(stkAddResult, pop(stkAdd1));
+	
+
+	stk = stkAddResult;
+	printf("%c", pop(stk));
+	printf("%c", pop(stk));
+	printf("%c", pop(stk));
+
+}
+
 int main(int argc, char** argv)
 {
 	//Initialisation du stack
@@ -390,29 +473,33 @@ int main(int argc, char** argv)
 	char operateur = pop(stk);
 
 	switch (operateur){
-	case('+') :
-		//Opérateur est une addition
-		if ((stk1->top->isNegative == -1 && stk2->top->isNegative == -1) ||
-			(stk1->top->isNegative == 1 && stk2->top->isNegative == 1)){
-			//Si c'est une addition entre deux nombres positifs ou deux nombres négatifs
-			addition(stk, stk1, stk2);
-		}
-		else{
-			//Si c'est une addition entre un nombre positif et un nombre négatif
-			soustraction(stk, stk1, stk2);
-		}
-		break;
-	case('-') :
-		if ((stk1->top->isNegative == -1 && stk2->top->isNegative == -1) ||
-			(stk1->top->isNegative == 1 && stk2->top->isNegative == 1)){
-			//Si c'est une soustraction entre deux nombres positifs ou deux nombres négatifs
-			soustraction(stk, stk1, stk2);
-		}
-		else{
-			//Si c'est une soustraction entre un nombre positif et un nombre négatif
-			addition(stk, stk1, stk2);
-		}
+		case('+') :
+			//Opérateur est une addition
+			if ((stk1->top->isNegative == -1 && stk2->top->isNegative == -1) ||
+				(stk1->top->isNegative == 1 && stk2->top->isNegative == 1)){
+				//Si c'est une addition entre deux nombres positifs ou deux nombres négatifs
+				addition(stk, stk1, stk2);
+			}
+			else{
+				//Si c'est une addition entre un nombre positif et un nombre négatif
+				soustraction(stk, stk1, stk2);
+			}
 			break;
+		case('-') :
+			if ((stk1->top->isNegative == -1 && stk2->top->isNegative == -1) ||
+				(stk1->top->isNegative == 1 && stk2->top->isNegative == 1)){
+				//Si c'est une soustraction entre deux nombres positifs ou deux nombres négatifs
+				soustraction(stk, stk1, stk2);
+			}
+			else{
+				//Si c'est une soustraction entre un nombre positif et un nombre négatif
+				addition(stk, stk1, stk2);
+			}
+				break;
+		case('*') :
+			multiplication(stk, stk1, stk2);
+			break;
+
 		default:
 			printf("Erreur! Opération inexistante.");
 			break;
