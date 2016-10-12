@@ -24,6 +24,8 @@ void parseoperator(int c);
 void parsevariable();
 void checkstack();
 void add();
+void sub();
+void mul();
 void print();
 
 void alert(char* message)
@@ -40,6 +42,10 @@ void freeb(bigint *b) {
     free(val);
     val = next;
   }
+}
+
+bigint **stackat(int index) {
+  return (stack.ptr + stack.len - 1 - index);
 }
 
 void shrink() {
@@ -66,49 +72,55 @@ void push(bigint *elem)
     if (tmp == NULL) alert("STACK FAIL");
     stack.ptr = tmp;
   }
-  *(stack.ptr + stack.len - 1) = elem;
+  *stackat(0) = elem;
 }
 
 bigint *pop()
 {
-  bigint  *ret = *(stack.ptr + stack.len - 1);
+  bigint  *ret = *stackat(0);
   stack.len--;
-  bigint **tmp = realloc(stack.ptr, stack.len * sizeof(bigint*));
-  if (tmp != NULL) {
-    stack.cap--;
-    stack.ptr = tmp;
+  if (stack.len > 0) {
+    bigint **tmp = realloc(stack.ptr, stack.len * sizeof(bigint*));
+    if (tmp != NULL) {
+      stack.cap--;
+      stack.ptr = tmp;
+    }
   }
   return ret;
 }
 
-bigint *peak()
+void swap()
 {
-  return *(stack.ptr + stack.len - 1);
-}
-
-void set(bigint *b)
-{
-  *(stack.ptr + stack.len - 1) = b;
-}
-
-void checkstack()
-{
+  bigint *tmp;
+  tmp = *stackat(0);
+  *stackat(0) = *stackat(1);
+  *stackat(1) = tmp;
 }
 
 void add()
 {
+  int ret;
+  if ((ret = (*stackat(0))->flags & 1) != (*stackat(1))->flags & 1) {
+    if (!ret) {
+      (*stackat(1))->flags &= ~1;
+      swap();
+    }
+    sub();
+    return;
+  }
   bigint *n1 = pop();
-  bigint *n2 = peak();
+  bigint *n2 = *stackat(0);
   digits *v1 = n1->value;
   digits *v2 = n2->value;
   
   bigint *r  = malloc(sizeof(bigint));
   digits *res = malloc(sizeof(digits));
   
-  int ret = 0, sum;
+  int sum;
 
   r->value = res;
-  r->flags = 0;
+  r->flags = n1->flags & n2->flags & 1;
+  ret = 0;
   
   goto adding;
   
@@ -141,17 +153,40 @@ void add()
     ret = sum / 10;
     v2 = v2->next;
   }
+  if (ret) {
+    res->next = malloc(sizeof(digits));
+    if (res->next == NULL)
+      alert("FAIL");
+    else res = res->next;
+    res->digit = 1;
+  }
   res->next = NULL;
-
+  
   freeb(n1);
   freeb(n2);
-  set(r);
+  
+  *stackat(0) = r;
 }
 
 void sub()
 {
+  if ((*stackat(0))->flags & 1) {
+    if ((*stackat(1))->flags & 1) {
+      (*stackat(0))->flags &= ~1;
+      (*stackat(1))->flags &= ~1;
+      swap();
+    } else {
+	(*stackat(0))->flags |= 1;
+	add();
+	return;
+    }
+  } else if ((*stackat(1))->flags & 1) {
+    (*stackat(0))->flags |= 1;
+      add();
+      return;
+  }
   bigint *n1 = pop();
-  bigint *n2 = peak();
+  bigint *n2 = *stackat(0);
   digits *v1 = n1->value;
   digits *v2 = n2->value;
   
@@ -160,7 +195,7 @@ void sub()
   digits *zero = NULL;
   
   int ret = 0, diff;
-
+  
   r->value = res;
   
   goto substract;
@@ -242,7 +277,7 @@ void sub()
     }
   }
   
-  set(r);
+  *stackat(0) = r;
 }
 
 void mul()
@@ -328,12 +363,16 @@ void parse()
   while ((c = getchar()) != '\n') {
     if (c >= '0' && c <= '9')
       parsenumber(c);
-    else if (c == '*' || c == '+' || c == '-' || c == '/')
+    else if (c == '*' || c == '+' || c == '-' || c == '/' || c == '=')
       parseoperator(c);
-    else if (c == '=')
-      parsevariable();
+    else if (c == EOF) {
+      printf("exit\n");
+      exit(1);
+    }
     else if (c == ' ' || c == '\t')
       continue;
+    else
+      parsevariable();
   }
 }
 
@@ -371,18 +410,23 @@ void parseoperator(int c)
   case '*':
     mul();
     break;
-  case '/':
+  case '/': // peut-être un jour
     //div();
     break;
+  case '=':
+    exit(1);
+    //newvar();
   }
 }
 
 void parsevariable()
 {
+  // peut-être ajouter un parse exit
 }
 
 int main()
 {
+  // Initialisation
   stack.ptr = malloc(sizeof(bigint*));
   if (stack.ptr != NULL) stack.cap = 1;
   bigint *b = malloc(sizeof(bigint*));
@@ -392,11 +436,12 @@ int main()
   d->digit = 0;
   d->next = NULL;
   push(b);
+  // Calculatrice
   while(1) {
     printf("> ");
     parse();
     shrink();
-    print(*peak());
+    print(**stackat(0));
     printf("\n");
   }
   return 0;
