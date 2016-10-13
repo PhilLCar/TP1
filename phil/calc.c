@@ -196,7 +196,7 @@ void ref() {
 void add()
 {
   if (stack.len < 2) {
-    alert ("Format de l'opération invalide, veuillez réessayer.\n");
+    alert ("Format de l'opération invalide, veuillez réessayer.");
     return;
   }
   int ret;
@@ -289,7 +289,7 @@ void add()
 void sub()
 {
   if (stack.len < 2) {
-    alert ("Format de l'opération invalide, veuillez réessayer.\n");
+    alert ("Format de l'opération invalide, veuillez réessayer.");
     return;
   }
   if ((*stackat(0))->flags & 1) {
@@ -420,7 +420,7 @@ void sub()
 void mul()
 {
   if (stack.len < 2) {
-    alert ("Format de l'opération invalide, veuillez réessayer.\n");
+    alert ("Format de l'opération invalide, veuillez réessayer.");
     return;
   }
   bigint *n1 = pop();
@@ -551,7 +551,7 @@ void parse()
     else
       parsevariable(c);
   }
-  if (stack.len > 3)
+  if (stack.len > 2)
     alert("Opération invalide.\n");
 }
 
@@ -605,7 +605,13 @@ void parseoperator(int c)
     //div();
     break;
   case '=':
-    newvar(getchar());
+    c = getchar();
+    if (c < 0x41 || c > 0x7A) {
+      ungetc(c, stdin);
+      alert("Impossible de définir cette variable!");
+      return;
+    }
+    newvar(c);
   }
 }
 
@@ -613,6 +619,7 @@ void parsevariable(int c)
 {
   int i, t, x = getchar();
   bigint *v;
+  char message[50] = "La variable «i» n'est pas définie!";
   // check for exit
   if (c == 'e')
     if (x == 'x')
@@ -652,7 +659,8 @@ void parsevariable(int c)
   }
   if ((t = var(c)) == -1) return;
   if ((v = variables[t]) == NULL) {
-    alert("Cette variable n'est pas définie");
+    message[14] = c;
+    alert(message);
     return;
   }
   push(v);
