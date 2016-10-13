@@ -503,7 +503,8 @@ void mul()
   while (--lvl > 0) {
     add();
   }
-  r->flags = (n1->flags ^ n2->flags) & 1;
+  if (res->digit)
+    r->flags = (n1->flags ^ n2->flags) & 1;
 
   freeb(n1);
   freeb(n2);
