@@ -44,6 +44,7 @@ void alert(char* message)
   emptystack();
   if (instr) {
     printf("L'opération en cours a du être annulée mais les variables ont été conservées.\n");
+    printf("Si vous voulez libérer plus de mémoire faites «free» pour libérer les variables.\n");
     instr = 0;
   }
 }
@@ -143,16 +144,19 @@ int var(int c) {
 
 void emptyvars() {
   int i;
+  bigint *stk = *stack.ptr;
   for (i = 0; i < 52; i++)
-    if (variables[i] != NULL)
-      if (--variables[i]->flags == 0)
+    if (variables[i] != NULL) {
+      if ((variables[i]->flags -= 2) < 2 && stk != variables[i]) 
 	freeb(variables[i]);
+      variables[i] = NULL;
+    }
 }
 
 void newvar(int c) {
   if ((c = var(c)) == -1) return;
   if (variables[c] != NULL)
-    if (variables[c]->flags-- == 0)
+    if ((variables[c]->flags -= 2) < 2)
       freeb(variables[c]);
   variables[c] = *stackat(0);
   variables[c]->flags += 2; // laisse le marqueur de négativité intact
@@ -163,10 +167,10 @@ void ref() {
   bigint *big = malloc(sizeof(bigint));
   digits *dig = malloc(sizeof(digits)), *tmp;
   if (big == NULL) {
-    alert("Mémoire insuffisante, essayez de fractionner vos opérations");
+    alert("Mémoire insuffisante! Essayez de fractionner vos opérations.");
     return;
   } else if (dig == NULL) {
-    alert("Mémoire insuffisante, essayez de fractionner vos opérations");
+    alert("Mémoire insuffisante! Essayez de fractionner vos opérations.");
     freeb(big);
     return;
   }
@@ -176,7 +180,7 @@ void ref() {
   while ((n = n / 10) > 0) {
     dig->next = malloc(sizeof(digits));
     if (dig == NULL) {
-      alert("Mémoire insuffisante, essayez de fractionner vos opérations");
+      alert("Mémoire insuffisante! Essayez de fractionner vos opérations.");
       freeb(big);
       return;
     }
@@ -200,7 +204,8 @@ void add()
     if (!ret) {
       (*stackat(1))->flags &= ~1;
       swap();
-    }
+    } else
+      (*stackat(0))->flags &= ~1;
     sub();
     return;
   }
@@ -213,10 +218,10 @@ void add()
   digits *res = malloc(sizeof(digits));
 
   if (r == NULL) {
-    alert("Mémoire insuffisante, essayez de fractionner vos opérations");
+    alert("Mémoire insuffisante! Essayez de fractionner vos opérations.");
     return;
   } else if (res == NULL) {
-    alert("Mémoire insuffisante, essayez de fractionner vos opérations");
+    alert("Mémoire insuffisante! Essayez de fractionner vos opérations.");
     freeb(r);
     return;
   }
@@ -232,7 +237,7 @@ void add()
   while (v1 != NULL && v2 != NULL) {   
     res->next = malloc(sizeof(digits));
     if (res->next == NULL) {
-      alert("Mémoire insuffisante, essayez de fractionner vos opérations");
+      alert("Mémoire insuffisante! Essayez de fractionner vos opérations.");
       freeb(r);
       return;
     } else res = res->next;
@@ -245,7 +250,7 @@ void add()
   while (v1 != NULL) {
     res->next = malloc(sizeof(digits));
     if (res->next == NULL) {
-      alert("Mémoire insuffisante, essayez de fractionner vos opérations");
+      alert("Mémoire insuffisante! Essayez de fractionner vos opérations.");
       freeb(r);
       return;
     } else res = res->next;
@@ -256,7 +261,7 @@ void add()
   while (v2 != NULL) {
     res->next = malloc(sizeof(digits));
     if (res->next == NULL) {
-      alert("Mémoire insuffisante, essayez de fractionner vos opérations");
+      alert("Mémoire insuffisante! Essayez de fractionner vos opérations.");
       freeb(r);
       return;
     } else res = res->next;
@@ -267,7 +272,7 @@ void add()
   if (ret) {
     res->next = malloc(sizeof(digits));
     if (res->next == NULL) {
-      alert("Mémoire insuffisante, essayez de fractionner vos opérations");
+      alert("Mémoire insuffisante! Essayez de fractionner vos opérations.");
       freeb(r);
       return;
     } else res = res->next;
@@ -293,7 +298,7 @@ void sub()
       (*stackat(1))->flags &= ~1;
       swap();
     } else {
-	(*stackat(0))->flags |= 1;
+	(*stackat(0))->flags &= ~1;
 	add();
 	return;
     }
@@ -329,7 +334,7 @@ void sub()
   while (v1 != NULL && v2 != NULL) {   
     res->next = malloc(sizeof(digits));
     if (res->next == NULL) {
-      alert("Mémoire insuffisante, essayez de fractionner vos opérations");
+      alert("Mémoire insuffisante! Essayez de fractionner vos opérations.");
       freeb(r);
       return;
     } else res = res->next;
@@ -341,14 +346,14 @@ void sub()
       res->digit = diff;
       ret = 0;
     }
-    if (res->digit != 0) zero = res;
+    if (res->digit) zero = res;
     v1 = v1->next;
     v2 = v2->next;
   }
   while (v1 != NULL) {
     res->next = malloc(sizeof(digits));
     if (res->next == NULL) {
-      alert("Mémoire insuffisante, essayez de fractionner vos opérations");
+      alert("Mémoire insuffisante! Essayez de fractionner vos opérations.");
       freeb(r);
       return;
     } else res = res->next;
@@ -359,7 +364,7 @@ void sub()
       res->digit = diff;
       ret = 0;
     }
-    if (res->digit != 0) zero = res;
+    if (res->digit) zero = res;
     v1 = v1->next;
   }
   while (v2 != NULL) {
@@ -376,7 +381,7 @@ void sub()
       res->digit = diff;
       ret = 0;
     }
-    if (res->digit != 0) zero = res;
+    if (res->digit) zero = res;
     v2 = v2->next;
   }
   res->next = NULL;
@@ -393,11 +398,11 @@ void sub()
     res = res->next;
     while (res != NULL) {
       res->digit = 10 - res->digit - ret;
-      if (res->digit != 0) zero = res;
+      if (res->digit) zero = res;
       res = res->next;
     }
   }
-
+  
   // si le nombre diminue de taille, enlève les zéros en trop;
   if (zero->next != NULL) {
     res = zero->next;
@@ -424,7 +429,7 @@ void mul()
   digits *v2;
   
   bigint *r;
-  digits *res;
+  digits *res, *zero;
   
   int ret, prod, lvl = 0;
   int i;
@@ -433,7 +438,8 @@ void mul()
     v2 = n2->value;
     r = malloc(sizeof(bigint));
     res = malloc(sizeof(digits));
-
+    zero = res;
+    
     if (r == NULL) {
       alert("Mémoire insuffisante, essayez de fractionner vos opérations");
       return;
@@ -466,6 +472,7 @@ void mul()
     multiply:
       res->digit = (prod = v1->digit * v2->digit + ret) % 10;
       ret = prod / 10;
+      if (res->digit) zero = res;
       v2 = v2->next;
     }
     if (ret) {
@@ -475,9 +482,20 @@ void mul()
 	freeb(r);
 	return;
       } else res = res->next;
-      res->digit = ret;
+      if (res->digit = ret) zero = res;
     }
     res->next = NULL;
+    
+    // si le nombre diminue de taille, enlève les zéros en trop;
+    if (zero->next != NULL) {
+      res = zero->next;
+      zero->next = NULL;
+      while (res->next != NULL) {
+	zero = res->next;
+	free(res);
+	res = zero;
+      }
+    }
     push(r);
     lvl++;
     v1 = v1->next;
@@ -523,13 +541,17 @@ void parse()
       parseoperator(c);
     else if (c == EOF) {
       printf("exit\n");
-      exit(1);
+      emptystack();
+      emptyvars();
+      exit(0);
     }
     else if (c == ' ' || c == '\t')
       continue;
     else
       parsevariable(c);
   }
+  if (stack.len > 3)
+    alert("Opération invalide.\n");
 }
 
 void parsenumber(int c)
@@ -588,12 +610,42 @@ void parseoperator(int c)
 
 void parsevariable(int c)
 {
-  int t = getchar();
+  int i, t, x = getchar();
   bigint *v;
+  // check for exit
+  if (c == 'e')
+    if (x == 'x')
+      if ((i = getchar()) == 'i')
+	if ((t = getchar()) == 't') {
+	  emptystack();
+	  emptyvars();
+	  exit(0);
+	} else {
+	  ungetc(t, stdin);
+	  ungetc(i, stdin);
+	}
+      else
+	ungetc(i, stdin);
+  // check for free
+  if (c == 'f')
+    if (x == 'r')
+      if ((i = getchar()) == 'e')
+	if ((t = getchar()) == 'e') {
+	  emptystack();
+	  emptyvars();
+	  while (getchar() != '\n');
+	  ungetc('\n', stdin);
+	  return;
+	} else {
+	  ungetc(t, stdin);
+	  ungetc(i, stdin);
+	}
+      else
+	ungetc(i, stdin);
   
-  ungetc(t, stdin);
+  ungetc(x, stdin);
   
-  if (t != ' ' && t != '\t' && t != '\n') {
+  if (x != ' ' && x != '\t' && x != '\n') {
     alert("Les variables ne peuvent contenir qu'un seul caractère!");
     return;
   }
