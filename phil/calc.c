@@ -216,6 +216,7 @@ void add()
   
   bigint *r  = malloc(sizeof(bigint));
   digits *res = malloc(sizeof(digits));
+  digits *zero = res;
 
   if (r == NULL) {
     alert("Mémoire insuffisante! Essayez de fractionner vos opérations.");
@@ -244,6 +245,7 @@ void add()
   adding:
     res->digit = (sum = v1->digit + v2->digit + ret) % 10;
     ret = sum / 10;
+    if (res->digit) zero = res;
     v1 = v1->next;
     v2 = v2->next;
   }
@@ -256,6 +258,7 @@ void add()
     } else res = res->next;
     res->digit = (sum = v1->digit + ret) % 10;
     ret = sum / 10;
+    if (res->digit) zero = res;
     v1 = v1->next;
   }
   while (v2 != NULL) {
@@ -267,6 +270,7 @@ void add()
     } else res = res->next;
     res->digit = (sum = v2->digit + ret) % 10;
     ret = sum / 10;
+    if (res->digit) zero = res;
     v2 = v2->next;
   }
   if (ret) {
@@ -277,11 +281,23 @@ void add()
       return;
     } else res = res->next;
     res->digit = 1;
+    zero = res;
   }
   res->next = NULL;
   
   freeb(n1);
   freeb(n2);
+
+  // si le nombre diminue de taille, enlève les zéros en trop;
+  if (zero->next != NULL) {
+    res = zero->next;
+    zero->next = NULL;
+    while (res->next != NULL) {
+      zero = res->next;
+      free(res);
+      res = zero;
+    }
+  }
   
   *stackat(0) = r;
 }
@@ -551,8 +567,10 @@ void parse()
     else
       parsevariable(c);
   }
-  if (stack.len > 2)
-    alert("Opération invalide.\n");
+  if (stack.len > 2) {
+    printf("Opération invalide.\n");
+    emptystack();
+  }
 }
 
 void parsenumber(int c)
