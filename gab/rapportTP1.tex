@@ -1,0 +1,74 @@
+\documentclass[]{report}
+\usepackage[utf8]{inputenc}
+\usepackage{enumitem}
+\begin{document}
+	\begin{titlepage}
+		\centering
+		{\scshape\LARGE Université de Montréal \par}
+		\vspace{1.5cm}
+		{\huge\bfseries Rapport TP 1\par}
+		\vspace{2cm}
+		{\Large Philippe \textsc{Caron}\\Gabriel \textsc{Lemyre}\par}
+		\vfill
+		Travail remis à l'intention de:\par
+		Marc \textsc{Feelay}
+		
+		\vfill
+		
+		% Bottom of the page
+		{\large Lundi 17 Octobre 2016\par}
+	\end{titlepage}
+	\newpage
+	\begin{normalsize}
+		\section*{\LARGE Fonctionnement général du programme}\vspace{4mm}
+		Ce programme est une calculatrice à précision infini à l'intérieur d'une console. Le terminal affiche en premier la chaîne "\textgreater " afin d'inciter l'utilisateurs à faire une entrée. Ces entrées doivent être sous forme postfixe.
+		\vspace{4mm}
+		\par Le format standard est "n1 n2 o" où 'n1' et 'n2' sont des nombres et 'o' est un opérateur binaire accepté. Le nombre n1 est toujours l'opérande de gauche et n2 l'opérande de droite. Si l'on veut effectuer une opération plus longue, il suffit d'ajouter un autre nombre suivi d'un opérateur comme suit: "n1 n2 o1 n3 o4".
+		Les opérateurs binaires acceptés sous ce format standard sont '+', '-' et '*'.
+		\begin{description}[noitemsep]
+			\item \hspace{4mm}'+' Permet l'addition;
+			\item \hspace{4mm}'-' permet la soustraction;
+			\item \hspace{4mm}'*' permet la multiplication.
+		\end{description}
+		\par Le second format accepté est "n1 u" où n1 est un nombre et u est un opérateur unaire accepté. Les opérateurs unaires acceptés sont '?' et '=variable' où variable est une lettre de [a-z] et où '?' n'accepte que les variables initialisées. Une variable ayant été initialisée par l'opérateur '=' est considéré comme un nombre.
+		\begin{description}[noitemsep]
+			\item \hspace{4mm}'?'Permet de vérifier le compteur de référence d'une variable;
+			\item \hspace{4mm}'=variable' permet l'initialisation d'une variable avec une valeur.
+		\end{description}
+		\par Il est possible de combiner les deux formats afin d'effectuer des opérations plus compliquées telles "451 741 * 4015 - =x". Le résultat de l'opération est retourné précédé de la chaîne "(ANS) ". Après cela, il est à nouveau possible de faire une nouvelle opération.
+		\vspace{4mm}
+		\par Deux commandes textuelles sont aussi utilisables:
+		\begin{description}[noitemsep]
+			\item \hspace{4mm}"free" Permet de libérer l'espace occupé par les variables et ainsi les réinitialiser;
+			\item \hspace{4mm}"exit" permet à l'utilisateur de quitter le programme.
+		\end{description}
+	\par Le programme utilise un système d'empilage et dépilage afin de pouvoir gérer des nombres arbitrairement grands avec aisance.
+		\vspace{4mm}
+		\newpage
+	\end{normalsize}
+	\begin{normalsize}
+		\section*{\LARGE Représentation des nombres et des variables}
+		Sample text
+		\vspace{4mm}
+	\end{normalsize}
+	\begin{normalsize}
+		\section*{\LARGE Analyse de chaque ligne et calcul de la réponse}
+		Sample text
+		\vspace{4mm}
+	\end{normalsize}
+	\begin{normalsize}
+		\section*{\LARGE Gestion mémoire}
+		Sample text
+		\vspace{4mm}
+	\end{normalsize}
+	\begin{normalsize}
+		\section*{\LARGE Implémentation des algorithmes}
+		Sample text
+		\vspace{4mm}
+	\end{normalsize}
+	\begin{normalsize}
+		\section*{\LARGE Traitement des erreurs}
+		Sample text
+		\vspace{4mm}
+	\end{normalsize}
+\end{document}          
