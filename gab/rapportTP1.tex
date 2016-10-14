@@ -47,12 +47,38 @@
 		\newpage
 	\end{normalsize}
 	\begin{normalsize}
-		\section*{\LARGE Représentation des nombres et des variables}
-		Sample text
+		\section*{\LARGE Représentation des nombres et variables}\vspace{4mm}
+		La représentation des nombres est faite avec l'utilisation de trois structures.\vspace{4mm}
+		\par La première est \textbf{digits} et possède deux membres: 
+		\begin{description}[noitemsep]
+			\item \hspace{4mm}\textbf{int} digit;
+			\item \hspace{4mm}\textbf{struct Digits} *next.
+		\end{description}
+	\par La structure \textbf{digits} est une pile de chiffres. L'entier digit étant la valeur du chiffre de 0 à 9 contenu à la position dans la pile (unité, dizaine, centaines...) et struct Digits *next étant le pointeur vers le prochain élément de la pile représentant le nombre.\vspace{4mm}
+	
+	\par La seconde structure est \textbf{bingint} et possède deux membres:
+		
+		\begin{description}[noitemsep]
+			\item \hspace{4mm}\textbf{int} flags;
+			\item \hspace{4mm}\textbf{digits} *value.
+		\end{description}
+		\par La structure \textbf{bigint} est la représentation d'un nombre. L'entier flags permet de faire deux choses. Il permet vérifier le compteur de référence en faisant un décalage logique à gauche d'un bit et il permet d'évaluer la négativité du nombre avec un et bit-à-bit lorsqu'utilisé avec le chiffre 1. Le pointeur *value de type \textbf{digits} pointe vers l'élément au sommet de la pile de chiffres.\vspace{4mm}
+	
+	\par La troisième structure est \textbf{stack} et possède trois membres:
+	
+	\begin{description}[noitemsep]
+		\item \hspace{4mm}\textbf{bigint} **ptr;
+		\item \hspace{4mm}\textbf{int} len;
+		\item \hspace{4mm}\textbf{int} cap.
+	\end{description}
+	\par La structure \textbf{stack} est la représentation d'une pile de nombres. Le membre **ptr est un pointeur vers l'adresse du bigint qui est au dessus de la pile. Le membre de type  \textbf{int} len représente la taille actuelle de la pile et cap représente sa capacité.
 		\vspace{4mm}
+	\par Les variables sont représenter par un pointeur sur le tableau variables de taille 52 et de type \textbf{bingint}. La position 0 est assignée à la variable 'A' et la position 51 à 'z'.	
 	\end{normalsize}
+	\newpage
+	
 	\begin{normalsize}
-		\section*{\LARGE Analyse de chaque ligne et calcul de la réponse}
+		\section*{\LARGE Analyse par ligne et calcul de la réponse}
 		Sample text
 		\vspace{4mm}
 	\end{normalsize}
