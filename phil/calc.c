@@ -22,26 +22,19 @@ struct Stack {
 bigint *variables[52];
 int instr = 1;
 
-void parsenumber(int c);
-void parseoperator(int c);
-void parsevariable(int c);
-void add();
-void sub();
-void mul();
-void ref();
-void print();
-void emptystack();
-void emptyvars();
-void push(bigint* b);
-bigint* pop();
 
+//////////////////// IMPRESSION ////////////////////
+/* ALERT
+ *   Affiche un message d'erreur avant de rétablir la pile
+ */
 void alert(char* message)
 {
-  while(getchar() != '\n'); //vide le buffer
+  while(getchar() != '\n'); // vide le buffer
   ungetc('\n', stdin);
   printf(message);
   printf("\n");
   emptystack();
+  // Averti l'utilisateur de la possibilité de libérer de la mémoire (juste une fois)
   if (instr) {
     printf("L'opération en cours a du être annulée mais les variables ont été conservées.\n");
     printf("Si vous voulez libérer plus de mémoire faites «free» pour libérer les variables.\n");
@@ -49,6 +42,36 @@ void alert(char* message)
   }
 }
 
+/* PRINT
+ *   Inverse les pointeurs mettre le nombre à l'endroit et les inverses à nouveau au moment de 
+ * l'impression.
+ */
+void print(bigint b)
+{
+  digits *i = b.value;
+  digits *a = NULL, *p;
+  if (b.flags & 1) printf("-");
+  do {
+    p = i->next;
+    i->next = a;
+    a = i;
+    i = p;
+  } while (i != NULL);
+  i = a;
+  a = NULL;
+  do {
+    printf("%d", i->digit);
+    p = i->next;
+    i->next = a;
+    a = i;
+    i = p;
+  } while (i != NULL);
+}
+
+//////////////////// MÉMOIRE ////////////////////
+/* FREEB
+ *   Libère la mémoire d'un nombre si celui-ci n'est pas référencé
+ */
 void freeb(bigint *b) {
   if (b->flags >> 1) return;
   digits *next, *val = b->value;
@@ -60,6 +83,9 @@ void freeb(bigint *b) {
   }
 }
 
+/* EMPTYSTACK
+ *   Vide le stack en laissant la dernière valeur dessus
+ */
 void emptystack() {
   bigint *b;
   while (stack.len > 1) {
@@ -68,11 +94,16 @@ void emptystack() {
   }
 }
 
-
+/* STACKAT
+ *   Retourne le nombre à la position spécifiée en paramètre, 
+ */
 bigint **stackat(int index) {
   return (stack.ptr + stack.len - 1 - index);
 }
 
+/* SHRINK
+ *   Conserve le nombre du dessus et libère celui d'en dessous
+ */
 void shrink() {
   // Dans le cas de ANS
   if (stack.len < 2) {
@@ -90,6 +121,9 @@ void shrink() {
   stack.len = 1;
 }
 
+/* PUSH
+ *   Empile un nouveau nombre
+ */
 void push(bigint *elem)
 {
   bigint **tmp;
@@ -106,6 +140,9 @@ void push(bigint *elem)
   *stackat(0) = elem;
 }
 
+/* POP
+ *   Dépile un nombre et retourne un pointeur vers celui-ci
+ */
 bigint *pop()
 {
   bigint  *ret = *stackat(0);
@@ -116,13 +153,16 @@ bigint *pop()
       stack.cap--;
       stack.ptr = tmp;
     } else {
-      // Pas erreur fatale
+      // Si la réallocation échoue, le programme va continuer de fonctionner mais il est exposé à des fuites de mémoire
       printf("\nIl semble y avoir des problèmes avec la libération de mémoire, terminez vos opérations et redémarrez\n");
     }
   }
   return ret;
 }
 
+/* SWAP
+ *   Échange les deux nombres au sommet de la pile
+ */
 void swap()
 {
   bigint *tmp;
@@ -131,6 +171,9 @@ void swap()
   *stackat(1) = tmp;
 }
 
+/* VAR
+ *   Obtient l'index du tableau associé à une lettre
+ */
 int var(int c) {
   if (c > 0x5A)
     c -= 0x61;
@@ -142,17 +185,23 @@ int var(int c) {
   return c;
 }
 
+/* EMPTYVARS
+ *   Vide le tableau des variables
+ */
 void emptyvars() {
   int i;
-  bigint *stk = *stack.ptr;
   for (i = 0; i < 52; i++)
     if (variables[i] != NULL) {
-      if ((variables[i]->flags -= 2) < 2 && stk != variables[i]) 
+      if ((variables[i]->flags -= 2) < 2 && *stack.ptr != variables[i]) 
 	freeb(variables[i]);
       variables[i] = NULL;
     }
 }
 
+/* NEWVAR
+ *   Stocke la valeur au sommet de la pile dans une variable en s'assurant de disposer de la valeur
+ * précédente.
+ */
 void newvar(int c) {
   if ((c = var(c)) == -1) return;
   if (variables[c] != NULL)
@@ -162,6 +211,10 @@ void newvar(int c) {
   variables[c]->flags += 2; // laisse le marqueur de négativité intact
 }
 
+//////////////////// CALCULATRICE ////////////////////
+/* REF
+ *   Remplace le nombre au sommet de la pile par le nombre de références à ce nombre.
+ */
 void ref() {
   int n = pop()->flags >> 1;
   bigint *big = malloc(sizeof(bigint));
@@ -193,6 +246,9 @@ void ref() {
   push(big);
 }
 
+/* ADD
+ *   Ajoute les deux nombre au sommet de la pile et empile le résultat
+ */
 void add()
 {
   if (stack.len < 2) {
@@ -200,6 +256,7 @@ void add()
     return;
   }
   int ret;
+  // Gère les cas négatifs et reroute la fonction dans la bonne direction
   if ((ret = ((*stackat(0))->flags & 1)) != ((*stackat(1))->flags & 1)) {
     if (!ret) {
       (*stackat(1))->flags &= ~1;
@@ -216,6 +273,7 @@ void add()
   
   bigint *r  = malloc(sizeof(bigint));
   digits *res = malloc(sizeof(digits));
+  // Sentinelle du dernier chiffre non-nul
   digits *zero = res;
 
   if (r == NULL) {
@@ -232,7 +290,8 @@ void add()
   r->value = res;
   r->flags = n1->flags & n2->flags & 1;
   ret = 0;
-  
+
+  // Construction du nombre résultat avec l'algorithme classique d'addition
   goto adding;
   
   while (v1 != NULL && v2 != NULL) {   
@@ -288,7 +347,7 @@ void add()
   freeb(n1);
   freeb(n2);
 
-  // si le nombre diminue de taille, enlève les zéros en trop;
+  // Si le nombre diminue de taille, enlève les zéros en trop;
   if (zero->next != NULL) {
     res = zero->next;
     zero->next = NULL;
@@ -302,12 +361,17 @@ void add()
   *stackat(0) = r;
 }
 
+/* SUB
+ *   Soustrait le nombre au sommet de la pile par celui juste avant et empile le résultat
+ * De telle sorte que (infixe) A - B = (postfixe) A B -
+ */
 void sub()
 {
   if (stack.len < 2) {
     alert ("Format de l'opération invalide, veuillez réessayer.");
     return;
   }
+  // Gère les cas négatifs et redirige l'exécution dans la bonne direction
   if ((*stackat(0))->flags & 1) {
     if ((*stackat(1))->flags & 1) {
       (*stackat(0))->flags &= ~1;
@@ -330,6 +394,7 @@ void sub()
   
   bigint *r  = malloc(sizeof(bigint));
   digits *res = malloc(sizeof(digits));
+  // Sentinelle du dernier chiffre non-nul
   digits *zero = res;
   
   int ret = 0, diff;
@@ -344,7 +409,8 @@ void sub()
   }
   
   r->value = res;
-  
+
+  // Création du nombre résultat
   goto substract;
   
   while (v1 != NULL && v2 != NULL) {   
@@ -402,11 +468,11 @@ void sub()
   }
   res->next = NULL;
 
-  // libère la mémoire occupée par les opérandes
+  // Libère la mémoire occupée par les opérandes
   freeb(n1);
   freeb(n2);
 
-  // si le nombre est négatif, inverse les digits
+  // Si le nombre est négatif, inverse les digits
   if (r->flags = ret) {
     res = r->value;
     res->digit = 10 - res->digit;
@@ -419,7 +485,7 @@ void sub()
     }
   }
   
-  // si le nombre diminue de taille, enlève les zéros en trop;
+  // Si le nombre diminue de taille, enlève les zéros en trop;
   if (zero->next != NULL) {
     res = zero->next;
     zero->next = NULL;
@@ -433,6 +499,12 @@ void sub()
   *stackat(0) = r;
 }
 
+/* MUL
+ *   Utilise l'algorithme classique de l'addition. L'opération est effectuée en 2 parties:
+ *      (1) Pour chaque chiffre du nombre en haut de la pile, ajoute à la pile le résultat de la 
+ *          multiplication entre le second nombre en haut de la pile et le chiffre en question
+ *      (2) Additionne chacun des nombre créés entre eux
+ */
 void mul()
 {
   if (stack.len < 2) {
@@ -449,7 +521,8 @@ void mul()
   
   int ret, prod, lvl = 0;
   int i;
-  
+
+  // (1) Création des nombres pour l'addition
   while (v1 != NULL) {
     v2 = n2->value;
     r = malloc(sizeof(bigint));
@@ -502,7 +575,7 @@ void mul()
     }
     res->next = NULL;
     
-    // si le nombre diminue de taille, enlève les zéros en trop;
+    // Si le nombre diminue de taille, enlève les zéros en trop;
     if (zero->next != NULL) {
       res = zero->next;
       zero->next = NULL;
@@ -516,9 +589,11 @@ void mul()
     lvl++;
     v1 = v1->next;
   }
+  // (2) Additione les nombres résultants de l'étape (1)
   while (--lvl > 0) {
     add();
   }
+  // Empêche le cas "-0"
   if (res->digit)
     r->flags = (n1->flags ^ n2->flags) & 1;
 
@@ -526,28 +601,10 @@ void mul()
   freeb(n2);
 }
 
-void print(bigint b)
-{
-  digits *i = b.value;
-  digits *a = NULL, *p;
-  if (b.flags & 1) printf("-");
-  do {
-    p = i->next;
-    i->next = a;
-    a = i;
-    i = p;
-  } while (i != NULL);
-  i = a;
-  a = NULL;
-  do {
-    printf("%d", i->digit);
-    p = i->next;
-    i->next = a;
-    a = i;
-    i = p;
-  } while (i != NULL);
-}
-
+//////////////////// PARSING ////////////////////
+/* PARSE
+ *   Dirige le parsing vers la bonne fonction
+ */
 void parse()
 {
   int c;
@@ -573,6 +630,10 @@ void parse()
   }
 }
 
+/* PARSENUMBER
+ *   Crée un nombre et ajoute les chiffres au fur et a mesure de la lecture.
+ * Appelée quand le parser rencontre un chiffre.
+ */
 void parsenumber(int c)
 {
   bigint *big = malloc(sizeof(bigint));
@@ -604,6 +665,9 @@ void parsenumber(int c)
   push(big);
 }
 
+/* PARSEOPERATOR
+ *   Appelle la fonction correspondant à l'opérateur lu.
+ */
 void parseoperator(int c)
 {
   switch(c) {
@@ -633,12 +697,16 @@ void parseoperator(int c)
   }
 }
 
+/* PARSEVARIABLE
+ *   Appelée quand le parser rencontre une lettre; accède à une variable ou aux commandes 
+ *   "exit" et "free"
+ */
 void parsevariable(int c)
 {
   int i, t, x = getchar();
   bigint *v;
   char message[50] = "La variable «i» n'est pas définie!";
-  // check for exit
+  // Gère la commande "exit"
   if (c == 'e')
     if (x == 'x')
       if ((i = getchar()) == 'i')
@@ -652,7 +720,7 @@ void parsevariable(int c)
 	}
       else
 	ungetc(i, stdin);
-  // check for free
+  // Gère la commande "free"
   if (c == 'f')
     if (x == 'r')
       if ((i = getchar()) == 'e')
