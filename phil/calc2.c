@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+// STRUCTURES
 typedef struct Digits {
   int            digit;
   struct Digits *next;
@@ -22,6 +23,27 @@ struct Stack {
 bigint *variables[52];
 int instr = 1;
 
+// FONCTIONS
+void     alert(char*);
+void     print(bigint);
+void     freeb(bigint*);
+void     emptystack();
+bigint **stackat(int);
+void     shrink();
+void     push();
+bigint  *pop();
+void     swap();
+int      var(int);
+void     emptyvars();
+void     newvar(int);
+void     ref();
+void     add();
+void     sub();
+void     mul();
+void     parse();
+void     parsenumber(int);
+void     parseoperator(int);
+void     parsevariable(int);
 
 //////////////////// IMPRESSION ////////////////////
 /* ALERT
@@ -40,6 +62,19 @@ void alert(char* message)
     printf("Si vous voulez libérer plus de mémoire faites «free» pour libérer les variables.\n");
     instr = 0;
   }
+}
+
+void reverse(bigint *b)
+{
+  digits *i = b->value;
+  digits *a = NULL, *p;
+  do {
+    p = i->next;
+    i->next = a;
+    a = i;
+    i = p;
+  } while (i != NULL);
+  b->value = a;
 }
 
 /* PRINT
@@ -145,7 +180,7 @@ void push(bigint *elem)
  */
 bigint *pop()
 {
-  bigint  *ret = *stackat(0);
+  bigint *ret = *stackat(0);
   stack.len--;
   if (stack.len > 0) {
     bigint **tmp = realloc(stack.ptr, stack.len * sizeof(bigint*));
@@ -216,9 +251,9 @@ void newvar(int c) {
  *   Remplace le nombre au sommet de la pile par le nombre de références à ce nombre.
  */
 void ref() {
-  int n = pop()->flags >> 1;
+  int     n   = pop()->flags >> 1;
   bigint *big = malloc(sizeof(bigint));
-  digits *dig = malloc(sizeof(digits)), *tmp;
+  digits *dig = malloc(sizeof(digits));
   if (big == NULL) {
     alert("Mémoire insuffisante! Essayez de fractionner vos opérations.");
     return;
@@ -271,7 +306,7 @@ void add()
   digits *v1 = n1->value;
   digits *v2 = n2->value;
   
-  bigint *r  = malloc(sizeof(bigint));
+  bigint *r   = malloc(sizeof(bigint));
   digits *res = malloc(sizeof(digits));
   // Sentinelle du dernier chiffre non-nul
   digits *zero = res;
@@ -378,21 +413,21 @@ void sub()
       (*stackat(1))->flags &= ~1;
       swap();
     } else {
-	(*stackat(0))->flags &= ~1;
-	add();
-	return;
+      (*stackat(0))->flags &= ~1;
+      add();
+      return;
     }
   } else if ((*stackat(1))->flags & 1) {
     (*stackat(0))->flags |= 1;
-      add();
-      return;
+    add();
+    return;
   }
   bigint *n1 = pop();
   bigint *n2 = *stackat(0);
   digits *v1 = n1->value;
   digits *v2 = n2->value;
   
-  bigint *r  = malloc(sizeof(bigint));
+  bigint *r   = malloc(sizeof(bigint));
   digits *res = malloc(sizeof(digits));
   // Sentinelle du dernier chiffre non-nul
   digits *zero = res;
@@ -473,7 +508,7 @@ void sub()
   freeb(n2);
 
   // Si le nombre est négatif, inverse les digits
-  if (r->flags = ret) {
+  if ((r->flags = ret)) {
     res = r->value;
     res->digit = 10 - res->digit;
     if (res->digit != 0) zero = res;
@@ -524,9 +559,9 @@ void mul()
 
   // (1) Création des nombres pour l'addition
   while (v1 != NULL) {
-    v2 = n2->value;
-    r = malloc(sizeof(bigint));
-    res = malloc(sizeof(digits));
+    v2   = n2->value;
+    r    = malloc(sizeof(bigint));
+    res  = malloc(sizeof(digits));
     zero = res;
     
     if (r == NULL) {
@@ -571,7 +606,7 @@ void mul()
 	freeb(r);
 	return;
       } else res = res->next;
-      if (res->digit = ret) zero = res;
+      if ((res->digit = ret)) zero = res;
     }
     res->next = NULL;
     
@@ -630,6 +665,135 @@ void parse()
   }
 }
 
+bigint *copy(bigint *c)
+{
+  bigint *b = malloc(sizeof(bigint));
+  digits *a, *d = malloc(sizeof(digits));
+  a = c->value;
+  b->flags = c->flags;
+  b->value = d;
+  goto copying;
+  while(a->next != NULL) {
+    d->next = malloc(sizeof(digits));
+    d = d->next;
+    a = a->next;
+  copying:
+    d->digit = a->digit;
+  }
+  d->next = NULL;
+  return b;
+}
+
+void idiv()
+{
+  bigint *n1 = pop();
+  bigint *n2 = pop();
+  //digits *v1 = n1->value;
+  //digits *v2 = n2->value;
+
+  bigint *sn1 = copy(n1);
+  bigint *sn2 = copy(n2);
+  reverse(sn1);
+  reverse(sn2);
+  digits *sv1 = sn1->value;
+  digits *sv2 = sn2->value;
+
+  bigint *b;
+  digits *d;
+  
+  bigint *r   = malloc(sizeof(bigint));
+  digits *res = malloc(sizeof(digits));
+
+  int c;
+
+  r->flags = 0;
+  r->value = res;
+
+  n1->flags += 2; // Garde n1 en vie
+
+  // Trouver le sous nombre
+  while(1) {
+    b = malloc(sizeof(bigint));
+    d = malloc(sizeof(digits));
+    b->flags = 0;
+    b->value = d;
+    printf("hehe\n");
+    while(1)
+      if (sv1->digit < sv2->digit) {
+	goto b1;
+	while (sv2 != NULL && sv1 != NULL) {
+	  d->next = malloc(sizeof(digits));
+	  // check
+	  d = d->next;
+	b1:
+	  d->digit = sv2->digit;
+	  printf("d: %d\n", d->digit);
+	  sv1 = sv1->next;
+	  sv2 = sv2->next;
+	}
+	break;
+      }
+      else if (sv1->digit == sv2->digit)
+	{
+	  printf("test\n");
+	  d->digit = sv2->digit;
+	  if (sv1->next == NULL || sv2->next == NULL) 
+	    d->next = malloc(sizeof(digits));
+	  d = d->next;
+	  sv1 = sv1->next;
+	  sv2 = sv2->next;
+	} //do watev
+      else {
+	goto b2;
+	while (sv2 != NULL && sv1 != NULL) {
+	  d->next = malloc(sizeof(digits));
+	  // check
+	  d = d->next;
+	b2:
+	  d->digit = sv2->digit;
+	  sv1 = sv1->next;
+	  sv2 = sv2->next;	
+	}
+	d->next = malloc(sizeof(digits));
+	  // check
+	d = d->next;
+	d->digit = sv2->digit;
+	sv2 = sv2->next;
+	break;
+      }
+    d->next = NULL;
+    reverse(b);
+    push(b);
+    c = -1;
+    do {
+      push(n1);
+      sub();
+      printf("stack: ");
+      print(**stackat(0));
+      printf("\n");
+      c++;
+    } while(!(*stackat(0))->flags);
+    pop();
+    freeb(b);
+    res->digit = c;
+    if (sv2 == NULL) break;
+    res->next = malloc(sizeof(digits));
+    res = res->next;
+    sv1 = sn1->value;
+  }
+  res->next = NULL;
+  
+  reverse(r);
+  push(r);
+
+  n1->flags -= 2;
+  
+  freeb(n1);
+  freeb(n2);
+  freeb(sn1);
+  freeb(sn2);
+}
+
 /* PARSENUMBER
  *   Crée un nombre et ajoute les chiffres au fur et a mesure de la lecture.
  * Appelée quand le parser rencontre un chiffre.
@@ -684,7 +848,7 @@ void parseoperator(int c)
     ref();
     break;
   case '/': // peut-être un jour
-    //div();
+    idiv();
     break;
   case '=':
     c = getchar();
@@ -707,9 +871,9 @@ void parsevariable(int c)
   bigint *v;
   char message[50] = "La variable «i» n'est pas définie!";
   // Gère la commande "exit"
-  if (c == 'e')
-    if (x == 'x')
-      if ((i = getchar()) == 'i')
+  if (c == 'e') {
+    if (x == 'x') {
+      if ((i = getchar()) == 'i') {
 	if ((t = getchar()) == 't') {
 	  emptystack();
 	  emptyvars();
@@ -718,12 +882,12 @@ void parsevariable(int c)
 	  ungetc(t, stdin);
 	  ungetc(i, stdin);
 	}
-      else
+      } else
 	ungetc(i, stdin);
-  // Gère la commande "free"
-  if (c == 'f')
-    if (x == 'r')
-      if ((i = getchar()) == 'e')
+    } // Gère la commande "free"
+  } else if (c == 'f') 
+    if (x == 'r') {
+      if ((i = getchar()) == 'e') {
 	if ((t = getchar()) == 'e') {
 	  emptystack();
 	  emptyvars();
@@ -734,8 +898,9 @@ void parsevariable(int c)
 	  ungetc(t, stdin);
 	  ungetc(i, stdin);
 	}
-      else
+      } else
 	ungetc(i, stdin);
+    }
   
   ungetc(x, stdin);
   
