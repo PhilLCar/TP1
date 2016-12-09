@@ -59,8 +59,8 @@
 	      (cons res dict) ;; returns
 	      (parse '() (cdr rem) (cons res (cddr stack)) dict)))
 	(cons 'OPERATION_FORMAT_ERROR dict)))
-   ((and (char>? (car rem) #\0)
-	 (char<? (car rem) #\9))
+   ((and (char>=? (car rem) #\0)
+	 (char<=? (car rem) #\9))
     (parse (append pass (list (car rem))) (cdr rem) stack dict))
    ((equal? (car rem) #\space)
     (if (null? pass)
