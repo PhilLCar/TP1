@@ -7,13 +7,6 @@
 
 ;;;----------------------------------------------------------------------------
 
-;;; Vous devez modifier cette section.  La fonction "traiter" doit
-;;; être définie, et vous pouvez ajouter des définitions de fonction
-;;; afin de bien décomposer le traitement à faire en petites
-;;; fonctions.  Il faut vous limiter au sous-ensemble *fonctionnel* de
-;;; Scheme dans votre codage (donc n'utilisez pas set!, set-car!,
-;;; begin, etc).
-
 ;;; La fonction traiter reçoit en paramètre une liste de caractères
 ;;; contenant la requête lue et le dictionnaire des variables sous
 ;;; forme d'une liste d'association.  La fonction retourne
@@ -49,7 +42,7 @@
 (define (parse pass rem stack dict)
   (cond
    ((null? rem)
-    (if (and (= (length stack) 1))
+    (if (= (length stack) 1)
 	(cons (string->list (number->string (car stack))) dict) ;; returns
 	(cons 'OPERATION_FORMAT_ERROR dict))) ;;returns
    ((member (car rem) '(#\+ #\- #\*))
@@ -87,7 +80,7 @@
   (lambda (expr dict)
     (let ((p-expr (parse '() (append expr '(#\space)) '() dict)))
       (if (symbol? (car p-expr))
-	  (cons (eval (car p-expr)) dict)
+	  (cons (append (eval (car p-expr)) '(#\newline)) dict)
 	  (cons (append (car p-expr) '(#\newline)) (cdr p-expr))))))
 	  
 
@@ -117,8 +110,8 @@
 ;;;;;;;;;;;;;;;;;
 ;; ERROR CODES ;;
 ;;;;;;;;;;;;;;;;;
-(define UNDEFINED_OPERATOR_ERROR (string->list "L'opérateur n'est pas défini\n"))
-(define UNDEFINED_VARIABLE_ERROR (string->list "La variable n'est pas définie\n"))
-(define VARIABLE_FORMAT_ERROR (string->list "Le format de la variable est incorrect\n"))
-(define OPERATION_FORMAT_ERROR (string->list "Le format de l'opération est incorrect\n"))
-(define NUMBER_FORMAT_ERROR (string->list "Le format du nomber est incorrect\n"))
+(define UNDEFINED_OPERATOR_ERROR (string->list "L'operateur n'est pas defini"))
+(define UNDEFINED_VARIABLE_ERROR (string->list "La variable n'est pas definie"))
+(define VARIABLE_FORMAT_ERROR (string->list "Le format de la variable est incorrect"))
+(define OPERATION_FORMAT_ERROR (string->list "Le format de l'operation est incorrect"))
+(define NUMBER_FORMAT_ERROR (string->list "Le format du nomber est incorrect"))
